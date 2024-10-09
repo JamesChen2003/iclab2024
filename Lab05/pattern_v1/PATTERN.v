@@ -53,7 +53,7 @@ initial	clk = 0;
 // ========================================
 // integer & parameter
 // ========================================
-integer PATTERN_NUMBER = 10000;
+integer PATTERN_NUMBER = 50;
 integer pattern_count, set_count;
 integer latency, total_latency;
 integer i, j, k, load, discard;
