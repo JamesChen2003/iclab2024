@@ -1,11 +1,13 @@
 `ifdef RTL
-    `define CYCLE_TIME 20.0
+    `define CYCLE_TIME 8
+	`define PAT_NUM 50
 `endif
 `ifdef GATE
-    `define CYCLE_TIME 20.0
+    `define CYCLE_TIME 8
+	`define PAT_NUM 10
 `endif
 `ifdef POST
-    `define CYCLE_TIME 20.0
+    `define CYCLE_TIME 8
 `endif
 
 module PATTERN(
@@ -53,12 +55,13 @@ initial	clk = 0;
 // ========================================
 // integer & parameter
 // ========================================
-integer PATTERN_NUMBER = 50;
+integer PATTERN_NUMBER = `PAT_NUM;
 integer pattern_count, set_count;
 integer latency, total_latency;
 integer i, j, k, load, discard;
 // file_input
 integer fin_image, fin_size, fin_template, fin_action, fin_output;
+integer out_value_all;
 
 // ========================================
 // wire & reg
@@ -69,7 +72,7 @@ reg [9:0]  pat_image_size;
 reg [2:0]  pat_action;
 reg [19:0] pat_out_value;
 
-reg [2:0] total_action;
+reg [3:0] total_action;
 reg [9:0] output_dimension;
 reg [7:0] R [15:0][15:0];
 reg [7:0] G [15:0][15:0];
@@ -110,27 +113,27 @@ end
 //================================================================
 task load_file_task; begin
 
-	fin_image = $fopen("../00_TESTBED/image.txt", "r");
+	fin_image = $fopen("../00_TESTBED/pattern_v1/image.txt", "r");
     if(fin_image == 0) begin
         $display("Error: Failed to open file image.txt "); $finish;
     end
 
-	fin_size = $fopen("../00_TESTBED/image_size.txt", "r");
+	fin_size = $fopen("../00_TESTBED/pattern_v1/image_size.txt", "r");
     if(fin_size == 0) begin
         $display("Error: Failed to open file image_size.txt "); $finish;
     end
 
-	fin_template = $fopen("../00_TESTBED/template.txt", "r");
+	fin_template = $fopen("../00_TESTBED/pattern_v1/template.txt", "r");
     if(fin_template == 0) begin
         $display("Error: Failed to open file template.txt "); $finish;
     end
 
-	fin_action = $fopen("../00_TESTBED/action.txt", "r");
+	fin_action = $fopen("../00_TESTBED/pattern_v1/action.txt", "r");
     if(fin_action == 0) begin
         $display("Error: Failed to open file action.txt "); $finish;
     end
 
-	fin_output = $fopen("../00_TESTBED/output.txt", "r");
+	fin_output = $fopen("../00_TESTBED/pattern_v1/output.txt", "r");
     if(fin_output == 0) begin
         $display("Error: Failed to open file output.txt "); $finish;
     end
@@ -293,6 +296,7 @@ task wait_valid_task; begin
 			$display ("-------------------------------------------------------");
 			$display ("                         FAIL                          ");
 			$display ("       excution latency is limited in 5000 cycles      ");
+			$display ("            PATTERN NO.%5d, SET NO.%1d             ", pattern_count+1,set_count+1);
 			$display ("-------------------------------------------------------");
       		#(CYCLE); $finish;
         end
@@ -315,23 +319,24 @@ task check_ans_task; begin
 	// Start checking
 	for(i=0 ; i<(output_dimension*output_dimension) ; i=i+1) begin
 		load = $fscanf(fin_output, "%d", pat_out_value);
+		out_value_all = 0;
 
 		for(j=19 ; j>=0 ; j=j-1) begin
-			if(out_value !== pat_out_value[j]) begin
-				fail_task;
-				$display ("-------------------------------------------------------");
-				$display ("                         FAIL                          ");
-				$display ("                  wrong output value                   ");
-				$display ("-------------------------------------------------------");
-				$display ("            PATTERN NO.%5d, OUTPUT NO.%2d              ", pattern_count+1, i+1);
-				$display ("  golden_out_value : %8d (%20b)                          ", pat_out_value, pat_out_value);
-				$display ("    your_out_value : %8d (%20b)                          ", out_value, out_value);
-				$display ("-------------------------------------------------------");
-				#(CYCLE); $finish;
-			end
-
+			out_value_all = out_value_all*2 + out_value;
 			// Wait a cycle
 			@(negedge clk);
+		end
+		if(out_value_all !== pat_out_value) begin
+			fail_task;
+			$display ("-------------------------------------------------------");
+			$display ("                         FAIL                          ");
+			$display ("                  wrong output value                   ");
+			$display ("-------------------------------------------------------");
+			$display ("   PATTERN NO.%5d, OUTPUT NO.%2d, SET NO.%1d              ", pattern_count+1, i+1,set_count+1);
+			$display ("  golden_out_value : %8d (%20b)                          ", pat_out_value, pat_out_value);
+			$display ("    your_out_value : %8d (%20b)                          ", out_value_all, out_value_all);
+			$display ("-------------------------------------------------------");
+			#(CYCLE); $finish;
 		end
 	end
 
@@ -462,6 +467,5 @@ $display("\033[38;2;252;238;238m                                                
 end endtask
 
 endmodule
-
 
 
