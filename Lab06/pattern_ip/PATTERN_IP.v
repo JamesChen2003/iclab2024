@@ -149,6 +149,7 @@ task check_ans_task; begin
 		$display ("     your OUT_code : %11b                              ", OUT_code);
 		$display ("-------------------------------------------------------");
         $display ("    Tip : pattern no. = line no. of the input file.    ");
+	$display ("-------------------------------------------------------");
         #(CYCLE); $finish;
     end
 end endtask
