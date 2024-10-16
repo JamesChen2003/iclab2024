@@ -137,7 +137,7 @@ end endtask
 
 
 task check_ans_task; begin
-    
+    #(1);
     if(OUT_code != pat_out_code) begin
         fail_task;
 		$display ("-------------------------------------------------------");
